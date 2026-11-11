@@ -1,0 +1,9 @@
+{
+  "name": "minjun-study",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node tests/validate-data.js && node tests/run-tests.js",
+    "serve": "python -m http.server 8765"
+  }
+}

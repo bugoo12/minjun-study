@@ -1,0 +1,92 @@
+:root {
+  --bg: #f5f8ff;
+  --card: #ffffff;
+  --primary: #4f8cff;
+  --primary-dark: #2f6fe0;
+  --success: #2e9e5b;
+  --danger: #d94b4b;
+  --text: #1f2a44;
+  --muted: #5b6b8a;
+  --border: #d9e2f3;
+  --radius: 16px;
+  --font: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin:0; font-family: var(--font); background: var(--bg); color: var(--text); font-size: 18px; line-height: 1.5; }
+.skip-link { position:absolute; left:-9999px; }
+.skip-link:focus { left:10px; top:10px; background:#fff; padding:8px; z-index:100; }
+.app-header { padding: 20px; text-align:center; background: linear-gradient(135deg,#4f8cff,#7fb0ff); color:#fff; }
+.app-header h1 { margin:0; font-size: 28px; }
+.subtitle { margin:4px 0 0; opacity:.9; }
+.main-nav { display:flex; flex-wrap:wrap; gap:8px; padding:12px; justify-content:center; background:#fff; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:10; }
+.nav-btn { font-size:16px; padding:10px 14px; border:2px solid var(--border); background:#fff; border-radius:12px; cursor:pointer; min-height:44px; }
+.nav-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+main { max-width: 960px; margin: 0 auto; padding: 16px; }
+.view { display:none; }
+.view.active { display:block; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,.04); }
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media (max-width:640px){ .grid-2 { grid-template-columns:1fr; } }
+h2 { margin-top:0; font-size:22px; }
+h3 { font-size:18px; }
+.big-text { font-size:28px; font-weight:700; margin:8px 0; }
+.meta-text { color:var(--muted); font-size:15px; }
+.status-text { font-size:15px; color:var(--muted); }
+.row-between { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+.progress-bar { height:14px; background:#e9eef8; border-radius:8px; overflow:hidden; }
+.progress-bar span { display:block; height:100%; background:var(--primary); width:0%; transition:width .2s; }
+.primary-btn { background:var(--primary); color:#fff; border:none; border-radius:12px; padding:12px 18px; font-size:18px; cursor:pointer; min-height:48px; }
+.primary-btn:hover { background:var(--primary-dark); }
+.secondary-btn { background:#fff; color:var(--primary-dark); border:2px solid var(--primary); border-radius:12px; padding:8px 14px; font-size:16px; cursor:pointer; min-height:40px; }
+.danger-btn { background:var(--danger); color:#fff; border:none; border-radius:12px; padding:10px 16px; font-size:16px; cursor:pointer; min-height:44px; }
+.big-btn { width:100%; font-size:20px; }
+.hidden { display:none !important; }
+.stat-card { text-align:center; }
+.groups { display:flex; flex-direction:column; gap:12px; }
+.group { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:14px; }
+.group h3 { margin:0 0 8px; }
+.problem { border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px; background:#fafcff; }
+.problem .prompt { font-size:18px; margin-bottom:8px; }
+.problem .figure { margin:8px 0; text-align:center; }
+.problem .figure svg { max-width:100%; height:auto; }
+.answer-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px; }
+.answer-row input { font-size:18px; padding:8px 10px; border:2px solid var(--border); border-radius:8px; min-height:44px; }
+.answer-row input[type="number"] { width:90px; }
+.frac-input { display:inline-flex; flex-direction:column; align-items:center; gap:2px; }
+.frac-input input { width:70px; text-align:center; }
+.frac-line { width:70px; height:2px; background:var(--text); }
+.result { margin-top:8px; padding:8px 10px; border-radius:8px; font-size:16px; }
+.result.correct { background:#e6f5ec; color:var(--success); border:1px solid #bfe3cc; }
+.result.wrong { background:#fdeaea; color:var(--danger); border:1px solid #f3c0c0; }
+.result .icon { font-weight:700; margin-right:6px; }
+.word-card { border:1px solid var(--border); border-radius:12px; padding:12px; margin-bottom:10px; background:#fafcff; }
+.word-row { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+.word-title { font-size:20px; font-weight:700; }
+.pill { display:inline-block; padding:4px 10px; border-radius:999px; background:#eef3ff; color:var(--primary-dark); font-size:14px; margin-left:6px; }
+.btn-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.audio-btn { background:#fff; border:2px solid var(--border); border-radius:10px; padding:8px 12px; cursor:pointer; min-height:40px; font-size:16px; }
+.spell-input { font-size:20px; padding:10px; border:2px solid var(--border); border-radius:8px; width:100%; max-width:320px; letter-spacing:2px; }
+.spell-input:focus { border-color:var(--primary); outline:none; }
+.diff-display { font-family: monospace; font-size:20px; margin:8px 0; }
+.diff-display .ok { color:var(--success); }
+.diff-display .bad { color:var(--danger); text-decoration:underline; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.cal-head { text-align:center; font-weight:700; color:var(--muted); padding:6px; }
+.cal-cell { min-height:60px; border:1px solid var(--border); border-radius:8px; padding:4px; font-size:14px; background:#fff; cursor:pointer; }
+.cal-cell.empty { background:transparent; border:none; cursor:default; }
+.cal-cell .status { font-size:12px; margin-top:4px; }
+.cal-cell.done { background:#e6f5ec; }
+.cal-cell.partial { background:#fff7e6; }
+.cal-cell .today { outline:2px solid var(--primary); }
+select, input[type="number"], input[type="range"] { font-size:16px; padding:6px; }
+label { display:block; margin:8px 0; }
+.settings-units label { display:flex; align-items:center; gap:8px; margin:6px 0; }
+.print-area { display:none; }
+
+/* print handled in print.css */
+
+@media (max-width:480px) {
+  body { font-size:16px; }
+  .big-text { font-size:24px; }
+  .nav-btn { font-size:14px; padding:8px 10px; }
+}

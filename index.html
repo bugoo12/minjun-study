@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#4f8cff" />
+  <title>민준이의 매일 공부</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/print.css" media="print" />
+</head>
+<body>
+  <a class="skip-link" href="#main">본문으로 건너뛰기</a>
+  <header class="app-header">
+    <h1>민준이의 매일 공부</h1>
+    <p class="subtitle">초등 4학년 매일 학습</p>
+  </header>
+
+  <nav class="main-nav" aria-label="주 메뉴">
+    <button class="nav-btn active" data-view="home" aria-current="page">오늘의 공부</button>
+    <button class="nav-btn" data-view="math">수학</button>
+    <button class="nav-btn" data-view="english">영어</button>
+    <button class="nav-btn" data-view="review">오답 복습</button>
+    <button class="nav-btn" data-view="calendar">학습 달력</button>
+    <button class="nav-btn" data-view="settings">설정</button>
+  </nav>
+
+  <main id="main">
+    <!-- Home -->
+    <section id="view-home" class="view active">
+      <div class="card">
+        <h2>오늘 날짜</h2>
+        <p id="home-date" class="big-text">-</p>
+      </div>
+      <div class="grid-2">
+        <div class="card stat-card">
+          <h3>수학 진행률</h3>
+          <p id="home-math-progress" class="big-text">0 / 20</p>
+          <div class="progress-bar"><span id="home-math-bar" style="width:0%"></span></div>
+        </div>
+        <div class="card stat-card">
+          <h3>영어 진행률</h3>
+          <p id="home-eng-progress" class="big-text">0 / 10</p>
+          <div class="progress-bar"><span id="home-eng-bar" style="width:0%"></span></div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>복습할 항목</h3>
+          <p id="home-review-count" class="big-text">0</p>
+        </div>
+        <div class="card">
+          <h3>연속 학습일</h3>
+          <p id="home-streak" class="big-text">0</p>
+        </div>
+      </div>
+      <div class="card">
+        <button id="home-continue" class="primary-btn big-btn">이어서 공부하기</button>
+        <p id="home-status" class="status-text" role="status"></p>
+      </div>
+    </section>
+
+    <!-- Math -->
+    <section id="view-math" class="view">
+      <div class="card">
+        <div class="row-between">
+          <h2>수학</h2>
+          <div>
+            <button id="math-print" class="secondary-btn">학습지 인쇄</button>
+            <button id="math-print-ans" class="secondary-btn">정답지 인쇄</button>
+          </div>
+        </div>
+        <p id="math-meta" class="meta-text"></p>
+        <div class="progress-bar"><span id="math-progress-bar" style="width:0%"></span></div>
+        <p id="math-progress-text" class="meta-text">0 / 20</p>
+      </div>
+      <div id="math-groups" class="groups"></div>
+      <div id="math-detail" class="card hidden"></div>
+    </section>
+
+    <!-- English -->
+    <section id="view-english" class="view">
+      <div class="card">
+        <div class="row-between">
+          <h2>영어</h2>
+          <div>
+            <button id="eng-print" class="secondary-btn">연습지 인쇄</button>
+            <button id="eng-print-ans" class="secondary-btn">정답지 인쇄</button>
+          </div>
+        </div>
+        <p id="eng-meta" class="meta-text"></p>
+        <div class="progress-bar"><span id="eng-progress-bar" style="width:0%"></span></div>
+        <p id="eng-progress-text" class="meta-text">0 / 10</p>
+      </div>
+      <div id="eng-list" class="word-list"></div>
+      <div id="eng-detail" class="card hidden"></div>
+    </section>
+
+    <!-- Review -->
+    <section id="view-review" class="view">
+      <div class="card">
+        <h2>오답 복습</h2>
+        <p id="review-meta" class="meta-text"></p>
+      </div>
+      <div id="review-math" class="card"></div>
+      <div id="review-eng" class="card"></div>
+    </section>
+
+    <!-- Calendar -->
+    <section id="view-calendar" class="view">
+      <div class="card">
+        <div class="row-between">
+          <button id="cal-prev" class="secondary-btn">◀</button>
+          <h2 id="cal-title">-</h2>
+          <button id="cal-next" class="secondary-btn">▶</button>
+        </div>
+        <div id="cal-grid" class="cal-grid"></div>
+      </div>
+      <div id="cal-detail" class="card"></div>
+    </section>
+
+    <!-- Settings -->
+    <section id="view-settings" class="view">
+      <div class="card">
+        <h2>설정</h2>
+        <h3>수학 단원</h3>
+        <div id="settings-units"></div>
+        <h3>난이도 (하루 문제 수)</h3>
+        <label>쉬움 <input type="number" id="set-easy" min="0" max="20" /></label>
+        <label>보통 <input type="number" id="set-normal" min="0" max="20" /></label>
+        <label>도전 <input type="number" id="set-hard" min="0" max="20" /></label>
+        <h3>음성</h3>
+        <label>음성 선택
+          <select id="set-voice"></select>
+        </label>
+        <button id="voice-preview" class="secondary-btn">음성 미리 듣기</button>
+        <p id="voice-info" class="meta-text"></p>
+        <label>속도 <input type="range" id="set-rate" min="0.5" max="1.2" step="0.1" /> <span id="set-rate-val"></span></label>
+        <label>따라 말하기 대기(초) <input type="number" id="set-shadow" min="1" max="10" step="1" /></label>
+        <h3>기록</h3>
+        <button id="export-json" class="secondary-btn">JSON 내보내기</button>
+        <input type="file" id="import-file" accept="application/json" />
+        <button id="import-json" class="secondary-btn">JSON 가져오기</button>
+        <button id="reset-data" class="danger-btn">기록 초기화</button>
+        <p id="settings-status" class="status-text" role="status"></p>
+      </div>
+      <div class="card">
+        <h3>안내</h3>
+        <p>학습 기록은 이 기기의 이 브라우저에 저장됩니다. 다른 기기로 자동 동기화되지 않습니다. 개인 학습 기록을 공개 저장소에 올리지 마세요.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="print-math" class="print-area"></div>
+  <div id="print-math-ans" class="print-area"></div>
+  <div id="print-eng" class="print-area"></div>
+  <div id="print-eng-ans" class="print-area"></div>
+
+  <script src="js/dateutil.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/math-generator.js"></script>
+  <script src="js/math-grade.js"></script>
+  <script src="js/math-render.js"></script>
+  <script src="js/speech.js"></script>
+  <script src="js/english.js"></script>
+  <script src="js/calendar.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
