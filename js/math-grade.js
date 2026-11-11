@@ -4,6 +4,7 @@
   function gradeMath(problem, input){
     const a = problem.answer;
     if(a.kind==='int'){
+      if(String(input.value).trim()==='') return {correct:false,message:'답을 입력해 주세요.'};
       const v = Number(input.value);
       if(!Number.isFinite(v)) return {correct:false, message:'숫자를 입력해 주세요.'};
       return {correct: v===a.value, message: v===a.value? '정답입니다.' : `정답은 ${a.value}입니다.` };
@@ -14,7 +15,7 @@
       const n = Number(raw);
       if(!Number.isFinite(n)) return {correct:false, message:'숫자로 입력해 주세요.'};
       const scaled = Math.round(n*a.scale);
-      const correct = scaled===a.value;
+      const correct = Math.abs(n*a.scale-a.value)<1e-8;
       const decimals = Math.round(Math.log10(a.scale));
       return {correct, message: correct? '정답입니다.' : `정답은 ${(a.value/a.scale).toFixed(decimals)}입니다.` };
     }
@@ -51,3 +52,4 @@
   global.gradeMath = gradeMath;
   global.gcd = gcd;
 })(window);
+

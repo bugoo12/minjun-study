@@ -116,3 +116,32 @@ assert(vIds.size === vocab.words.length, 'unique vocab ids');
 
 console.log(`\nTests finished: ${passed} passed, ${failed} failed`);
 if(failed>0) process.exit(1);
+
+
+// Regression checks for learning correctness.
+const A=require('assert');
+sandbox.Storage.reset();
+let es=sandbox.English.ensureSet('2026-11-11'), wid=es.newWordIds[0];
+sandbox.English.recordFullAttempt(wid,es.date,false,false,false);
+A.equal(es.progress[wid].practiced,false);
+sandbox.English.recordFullAttempt(wid,es.date,true,false,true);
+A.equal(es.progress[wid].practiced,true);
+A(sandbox.Storage.get().vocabProgress.review[wid].due.includes('2026-11-12'));
+let next=sandbox.English.ensureSet('2026-11-13');
+A(next.reviewWordIds.includes(wid),'missed review must carry forward');
+A.equal(new Set([...next.newWordIds,...next.reviewWordIds]).size,10);
+A.equal(sandbox.gradeMath({answer:{kind:'int',value:0}},{value:''}).correct,false);
+A.equal(sandbox.gradeMath({answer:{kind:'scaled',value:123,scale:100}},{value:'1.234'}).correct,false);
+for(let day=0;day<365;day++){
+ const ps=sandbox.MathGen.generate(sandbox.DateUtil.addDays('2026-11-11',day),settings);
+ for(const p of ps){
+  A(!/내각의 합|넓이/.test(p.prompt));
+  if(p.unit==='fraction'){
+   A(p.answer.num>=0);
+   const ds=[...p.prompt.matchAll(/\d+\/(\d+)/g)].map(m=>m[1]);
+   A(new Set(ds).size<=1,'same-denominator fractions');
+  }
+  if(p.answer.kind==='choice') A(p.options.includes(p.answer.value));
+ }
+}
+console.log('Regression checks passed: overdue reviews, honest completion, 365 days / 7300 math questions.');

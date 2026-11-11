@@ -21,6 +21,11 @@
       global.English.setVocab(v);
     } catch(e){ console.error(e); global.VocabData = {words:[]}; global.English.setVocab(global.VocabData); }
 
+    try {
+      const res=await fetch('data/daily-plan.json',{cache:'no-store'});
+      if(res.ok) global.DailyPlan=await res.json();
+    } catch(e) { /* Date-based local lessons work even offline. */ }
+
     // settings units defaults from config
     const st = global.Storage.get();
     if(global.MathConfig.units){
@@ -37,9 +42,6 @@
 
     bindNav();
     bindHome();
-    bindMath();
-    bindEnglish();
-    bindReview();
     bindCalendar();
     bindSettings();
 
@@ -49,7 +51,19 @@
 
     showView('home');
     renderHome();
-    // notice if date changed? handled in renderHome
+    let activeDate = t;
+    function checkDay(){
+      const next = global.DateUtil.todayKST();
+      if(next === activeDate) return;
+      activeDate = next;
+      global.Speech.cancel();
+      document.getElementById('eng-detail').classList.add('hidden');
+      showView('home');
+      document.getElementById('home-status').textContent = '새 날짜의 공부가 준비됐어요. 어제 기록은 학습 달력에 보관돼요.';
+    }
+    setInterval(checkDay, 1000);
+    document.addEventListener('visibilitychange', checkDay);
+    window.addEventListener('focus', checkDay);
   }
 
   function showView(name){
@@ -81,6 +95,8 @@
   function renderHome(){
     const date = global.DateUtil.todayKST();
     document.getElementById('home-date').textContent = date;
+    const plan=global.DailyPlan;
+    document.getElementById('daily-note').textContent=plan && plan.date===date ? plan.message : '5문제씩 천천히 풀고 잠깐 쉬어 가요. 영어는 가리고 직접 써 봐요.';
     const ms = ensureMathSet(date);
     const es = global.English.ensureSet(date);
     const mathDone = Object.values(ms.answers).filter(a=>a.completed).length;
@@ -149,13 +165,17 @@
 
   function ensureMathSet(date){
     const st = global.Storage.get();
-    if(st.mathSets[date] && st.mathSets[date].contentVersion===global.Storage.CONTENT_VERSION){
+    if(st.mathSets[date]){
       return st.mathSets[date];
     }
     const settings = JSON.parse(JSON.stringify(st.settings));
     const cfg = global.MathConfig;
     const wmap = {};
     (cfg.units||[]).forEach(u=>{ wmap[u.id]=u.weight; });
+    const unitIds=(cfg.units||[]).map(u=>u.id);
+    const planned=global.DailyPlan;
+    const focus=(planned && planned.date===date && unitIds.includes(planned.focusUnit)) ? planned.focusUnit : unitIds[global.DateUtil.dateToIndex(date)%unitIds.length];
+    if(focus) wmap[focus]=8;
     settings._weights = wmap;
     settings._problemsPerDay = cfg.problemsPerDay || 20;
     // enabled units respect settings.units
@@ -321,6 +341,7 @@
   function renderEnglish(){
     const date = global.DateUtil.todayKST();
     const set = global.English.ensureSet(date);
+    document.getElementById('eng-list').classList.remove('hidden');
     document.getElementById('eng-meta').textContent = `${date} · 새 단어 ${set.newWordIds.length}개 · 복습 ${set.reviewWordIds.length}개${set.reviewMode?' (전체 단어 복습)':''}`;
     const sum = global.English.progressSummary(date);
     document.getElementById('eng-progress-bar').style.width = (sum.total? sum.practiced/sum.total*100 : 0)+'%';
@@ -378,17 +399,19 @@
     const set = global.English.ensureSet(date);
     const detail = document.getElementById('eng-detail');
     detail.classList.remove('hidden');
-    let html = `<h3>${escapeHtml(w.word)} <span class="pill">${escapeHtml(w.pos)}</span></h3>`;
+    document.getElementById('eng-list').classList.add('hidden');
+    const testing=currentEngStep===2 || currentEngStep===3;
+    let html = `<h3>${testing?'기억해서 써 보기':escapeHtml(w.word)} <span class="pill">${escapeHtml(w.pos)}</span></h3>`;
     html += `<p><strong>뜻:</strong> ${escapeHtml(w.meaning)}</p>`;
     if(w.icon) html += `<div style="font-size:44px;margin:8px 0;">${escapeHtml(w.icon)}</div>`;
-    html += audioButtons(w);
+    html += audioButtons(w, testing);
     html += `<p class="meta-text">단계 ${currentEngStep+1} / 6</p>`;
 
     if(currentEngStep===0){
       html += `<p>단어·뜻·그림을 보고 발음을 들어 보세요.</p>`;
       html += `<div class="btn-row"><button id="eng-next" class="primary-btn">다음</button></div>`;
     } else if(currentEngStep===1){
-      html += `<p>발음을 듣고 3초 동안 따라 말해 보세요. (자동 평가 없음)</p>`;
+      html += `<p>발음을 듣고 따라 말한 뒤, 위 단어를 보고 한 번 써 보세요. (발음 자동 평가 없음)</p><label>보고 쓰기 <input id="copy-spell" class="spell-input" autocomplete="off" spellcheck="false" autocapitalize="none" /></label><p id="copy-result" role="status"></p>`;
       html += `<div class="btn-row"><button id="eng-shadow" class="primary-btn">따라 말하기 시작</button> <button id="eng-next" class="secondary-btn">다음</button></div>`;
     } else if(currentEngStep===2){
       currentFillPattern = global.English.fillPattern(w.word);
@@ -402,7 +425,7 @@
         }
       });
       html += `<div style="margin:10px 0;">${fillHtml}</div>`;
-      html += `<div class="btn-row"><button id="fill-check" class="primary-btn">확인</button> <button id="eng-next" class="secondary-btn">다음</button></div>`;
+      html += `<div class="btn-row"><button id="fill-check" class="primary-btn">확인</button> <button id="eng-next" class="secondary-btn" disabled>다음</button></div>`;
       html += `<div id="fill-result" class="result-slot"></div>`;
     } else if(currentEngStep===3){
       html += `<p>단어 전체를 직접 써 보세요. (뜻이나 음성을 힌트로 사용할 수 있어요)</p>`;
@@ -422,17 +445,19 @@
 
     detail.innerHTML = html;
     bindEngDetailEvents(w, date);
+    detail.scrollIntoView({behavior:"smooth",block:"start"});
+    const field=detail.querySelector("input"); if(field) field.focus({preventScroll:true});
   }
 
-  function audioButtons(w){
+  function audioButtons(w, testing=false){
     return `<div class="btn-row">
       <button class="audio-btn" data-action="word">🔊 단어 듣기</button>
-      <button class="audio-btn" data-action="example">🔊 예문 듣기</button>
+      ${testing?'':'<button class="audio-btn" data-action="example">🔊 예문 듣기</button>'}
       <button class="audio-btn" data-action="slow">🐢 느리게</button>
       <button class="audio-btn" data-action="repeat">🔁 3회 반복</button>
       <button class="audio-btn" data-action="shadow">🎤 따라 말하기</button>
     </div>
-    <p class="meta-text">예문: ${escapeHtml(w.example)} (${escapeHtml(w.exampleMeaning)})</p>`;
+    ${testing?'':`<p class="meta-text">예문: ${escapeHtml(w.example)} (${escapeHtml(w.exampleMeaning)})</p>`}`;
   }
 
   function playWordAudio(w, mode){
@@ -464,7 +489,10 @@
       });
     });
     const nextBtn = detail.querySelector('#eng-next');
-    if(nextBtn) nextBtn.addEventListener('click', ()=>{
+    if(nextBtn && currentEngStep!==4) nextBtn.addEventListener('click', ()=>{
+      if(currentEngStep===1 && detail.querySelector('#copy-spell').value.trim().toLowerCase()!==w.word.toLowerCase()){
+        detail.querySelector('#copy-result').textContent='위 단어를 보고 철자를 천천히 써 보세요.'; return;
+      }
       currentEngStep = Math.min(5, currentEngStep+1);
       renderEngStep(date);
     });
@@ -485,6 +513,7 @@
       const slot = detail.querySelector('#fill-result');
       if(ok){
         slot.innerHTML = `<div class="result correct"><span class="icon">✅ 정답</span> 빠진 철자를 모두 맞혔어요!</div>`;
+        nextBtn.disabled=false;
       } else {
         slot.innerHTML = `<div class="result wrong"><span class="icon">❌ 다시 확인</span> 이 부분을 다시 볼까요?</div>`;
       }
@@ -519,7 +548,9 @@
         // move to step4
         setTimeout(()=>{ currentEngStep = 4; renderEngStep(date); }, 600);
       } else {
-        slot.innerHTML = `<div class="result wrong"><span class="icon">❌ 이 부분을 다시 볼까요?</span> 틀린 부분을 확인해 보세요.</div>${diffHtml}
+        currentHintUsed=true;
+        global.English.markHint(currentEngWord,date);
+        slot.innerHTML = `<div class="result wrong"><span class="icon">❌ 이 부분을 다시 볼까요?</span> 정답을 보고 기억한 뒤 다시 써 보세요: <strong>${escapeHtml(w.word)}</strong></div>${diffHtml}
         <div class="btn-row"><button id="retry-spell" class="secondary-btn">다시 도전</button></div>`;
         const retryBtn = detail.querySelector('#retry-spell');
         if(retryBtn) retryBtn.addEventListener('click', ()=>{
@@ -528,7 +559,9 @@
           inputEl.focus();
         });
       }
-      renderEnglish(); // update progress
+      const sum=global.English.progressSummary(date);
+      document.getElementById('eng-progress-text').textContent=`${sum.practiced} / ${sum.total}`;
+      document.getElementById('eng-progress-bar').style.width=(sum.practiced/sum.total*100)+'%';
     });
     const finishBtn = detail.querySelector('#eng-finish');
     if(finishBtn) finishBtn.addEventListener('click', ()=>{ document.getElementById('eng-detail').classList.add('hidden'); renderEnglish(); });
@@ -780,3 +813,4 @@
 
   init();
 })();
+

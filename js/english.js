@@ -12,7 +12,12 @@
     const st = global.Storage.get();
     if(st.engSets[date]) return st.engSets[date];
     const newSel = selectNewWords(date);
-    const reviewIds = newSel.ids.length ? getDueReviews(date, newSel.ids) : getDueReviews(date, []);
+    const reviewIds = getDueReviews(date, []).slice(0,4);
+    newSel.ids = newSel.ids.filter(id=>!reviewIds.includes(id)).slice(0,10-reviewIds.length);
+    if(newSel.ids.length+reviewIds.length<10){
+      const extra=sortedWords().filter(w=>!newSel.ids.includes(w.id)&&!reviewIds.includes(w.id));
+      newSel.ids.push(...extra.slice(0,10-newSel.ids.length-reviewIds.length).map(w=>w.id));
+    }
     const set = {
       date,
       contentVersion: global.Storage.CONTENT_VERSION,
@@ -50,7 +55,7 @@
     Object.keys(vp).forEach(id=>{
       if(ex.has(id)) return;
       const info = vp[id];
-      if(info && Array.isArray(info.due) && info.due.includes(date)) due.push(id);
+      if(info && Array.isArray(info.due) && info.due.some(day=>day<=date)) due.push(id);
     });
     return due;
   }
@@ -65,6 +70,12 @@
         // schedule +1,+3,+7
         vp.review[wordId] = { due: [global.DateUtil.addDays(date,1), global.DateUtil.addDays(date,3), global.DateUtil.addDays(date,7)], wrongCount:0 };
       }
+    });
+    global.Storage.update(d=>{
+      const info=d.vocabProgress.review[wordId];
+      info.due=info.due.filter(day=>day>date);
+      if(!info.due.length) info.due=[global.DateUtil.addDays(date,7)];
+      if(noHint && d.reviewEngWrong) delete d.reviewEngWrong[wordId];
     });
     // update set progress
     global.Storage.update(d=>{
@@ -105,7 +116,7 @@
         const p = set.progress[wordId];
         p.attempts = (p.attempts||0)+1;
         p.fullSubmitted = true;
-        p.practiced = true;
+        p.practiced = p.practiced || correct;
         if(correct){
           p.noHintCorrect = p.noHintCorrect || (noHintCorrect && !hintUsed);
         }
@@ -155,6 +166,8 @@
     const ids = [...set.newWordIds, ...set.reviewWordIds];
     let practiced=0;
     ids.forEach(id=>{ if(set.progress[id] && set.progress[id].practiced) practiced++; });
+    set.completed = ids.length>0 && practiced===ids.length;
+    global.Storage.save();
     return { total: ids.length, practiced };
   }
 
@@ -164,3 +177,4 @@
     spellingDiff, progressSummary, VOCAB: ()=>VOCAB
   };
 })(window);
+

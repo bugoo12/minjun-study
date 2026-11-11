@@ -90,3 +90,9 @@ label { display:block; margin:8px 0; }
   .big-text { font-size:24px; }
   .nav-btn { font-size:14px; padding:8px 10px; }
 }
+
+
+#eng-detail {scroll-margin-top:20px;}
+button:disabled {opacity:.45;cursor:not-allowed;}
+.spell-input {font-size:24px;letter-spacing:3px;}
+.figure svg {max-width:100%;height:auto;}

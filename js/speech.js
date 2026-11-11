@@ -9,6 +9,8 @@
   function loadVoices(){
     if(!synth) return [];
     voices = synth.getVoices() || [];
+    const settings=global.Storage.get().settings;
+    if(!selectedVoice) selectedVoice=voices.find(v=>v.name===settings.voiceName && v.lang===settings.voiceLang)||suggestVoice();
     return voices;
   }
   function isFemaleGoogle(v){
@@ -99,3 +101,4 @@
     setVoiceByName, getSelected, cancel, speak, speakRepeat, shadow, playAudio
   };
 })(window);
+

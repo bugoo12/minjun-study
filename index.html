@@ -12,7 +12,7 @@
   <a class="skip-link" href="#main">본문으로 건너뛰기</a>
   <header class="app-header">
     <h1>민준이의 매일 공부</h1>
-    <p class="subtitle">초등 4학년 매일 학습</p>
+    <p class="subtitle">초등 4학년 · 하루 수학 20문제 + 영어 10단어</p><p>한국 시간 매일 00:00 새 학습 · 기록은 그대로 보관</p>
   </header>
 
   <nav class="main-nav" aria-label="주 메뉴">
@@ -29,7 +29,7 @@
     <section id="view-home" class="view active">
       <div class="card">
         <h2>오늘 날짜</h2>
-        <p id="home-date" class="big-text">-</p>
+        <p id="home-date" class="big-text">-</p><p id="daily-note" role="status"></p>
       </div>
       <div class="grid-2">
         <div class="card stat-card">
@@ -73,6 +73,7 @@
         <div class="progress-bar"><span id="math-progress-bar" style="width:0%"></span></div>
         <p id="math-progress-text" class="meta-text">0 / 20</p>
       </div>
+      <div class="card"><strong>EBS 초4 2학기 단원 연계</strong><p>분수 · 삼각형 · 소수 · 사각형 · 꺾은선그래프 · 다각형</p><p>동일한 학습 범위로 직접 만든 연습문제입니다. EBS 원문 문제 또는 공식 제공 서비스가 아닙니다.</p><a href="https://www.ebsmath.co.kr/" target="_blank" rel="noopener">EBSMath 개념 공부 ↗</a></div>
       <div id="math-groups" class="groups"></div>
       <div id="math-detail" class="card hidden"></div>
     </section>
@@ -91,6 +92,7 @@
         <div class="progress-bar"><span id="eng-progress-bar" style="width:0%"></span></div>
         <p id="eng-progress-text" class="meta-text">0 / 10</p>
       </div>
+      <div class="card"><strong>듣기 → 따라 말하며 보고 쓰기 → 빈칸 → 가리고 쓰기</strong><p>매일 총 10단어. 밀린 복습을 먼저 챙기고 새 단어를 배워요. 정답을 직접 쓴 단어만 완료돼요.</p><p class="meta-text">Google 여성 영어 음성이 있으면 우선 선택합니다. 제공 음성은 기기·브라우저마다 달라요. 설정에서 확인하세요.</p></div>
       <div id="eng-list" class="word-list"></div>
       <div id="eng-detail" class="card hidden"></div>
     </section>
@@ -155,15 +157,15 @@
   <div id="print-eng" class="print-area"></div>
   <div id="print-eng-ans" class="print-area"></div>
 
-  <script src="js/dateutil.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/math-generator.js"></script>
-  <script src="js/math-grade.js"></script>
-  <script src="js/math-render.js"></script>
-  <script src="js/speech.js"></script>
-  <script src="js/english.js"></script>
-  <script src="js/calendar.js"></script>
-  <script src="js/settings.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/dateutil.js?v=20261111b"></script>
+  <script src="js/storage.js?v=20261111b"></script>
+  <script src="js/math-generator.js?v=20261111b"></script>
+  <script src="js/math-grade.js?v=20261111b"></script>
+  <script src="js/speech.js?v=20261111b"></script>
+  <script src="js/english.js?v=20261111b"></script>
+  <script src="js/calendar.js?v=20261111b"></script>
+  <script src="js/settings.js?v=20261111b"></script>
+  <script src="js/app.js?v=20261111b"></script>
 </body>
 </html>
+

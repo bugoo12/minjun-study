@@ -73,7 +73,7 @@
     const type = pick(rng, types);
     if(type==='calc'){
       const dens = [2,3,4,5,6,8];
-      let d1=pick(rng,dens), d2=pick(rng,dens);
+      let d1=pick(rng,dens), d2=d1;
       if(diff==='easy'){ d2=d1; }
       const n1=randInt(rng,1,d1-1), n2=randInt(rng,1,d2-1);
       const op = rng()<0.5?'+':'-';
@@ -95,8 +95,8 @@
       // a/b + x = c/d
       const dens=[3,4,5,6];
       const d=pick(rng,dens);
-      const resN=randInt(rng,2,d*2);
       const addN=randInt(rng,1,d-1);
+      const resN=randInt(rng,addN+1,d*2);
       const missN = resN - addN;
       const prompt = `빈칸에 알맞은 분수를 쓰세요: ${addN}/${d} + □ = ${resN}/${d}`;
       return {
@@ -114,7 +114,7 @@
     // total/part? 
     const a = randInt(rng,1,part-1);
     const b = part;
-    const prompt = `문장제: ${who}가 피자 ${a}/${b}조각을 먹었습니다. 남은 양은 전체에서 얼마인가요? (분수로 쓰세요)`;
+    const prompt = `문장제: ${who}가 피자 한 판의 ${a}/${b}만큼 먹었습니다. 남은 양은 전체에서 얼마인가요? (분수로 쓰세요)`;
     // answer 1 - a/b
     const resNum = b - a;
     return {
@@ -191,60 +191,19 @@
   }
 
   function genTriangle(rng, diff){
-    const variants = [
-      {type:'right', sides:[3,4,5], angles:[90,53,37], q:'직각', rightCorner:0?0:0},
-    ];
-    // choose a scenario
-    const scenario = pick(rng, [
-      {name:'right', sides:[3,4,5], angles:[90,37,53], right:0, ask:'rightAngle'},
-      {name:'equilateral', sides:[6,6,6], angles:[60,60,60], right:null, ask:'name'},
-      {name:'isosceles', sides:[5,5,8], angles:[40,40,100], right:null, ask:'base'},
-      {name:'scalene', sides:[4,5,6], angles:[50,60,70], right:null, ask:'perimeter'}
-    ]);
-    const fig = triFigure(scenario.name, scenario.sides, scenario.angles, scenario.right);
-    if(diff==='easy' || scenario.ask==='name'){
-      const ansName = scenario.name==='right'?'직각삼각형': (scenario.name==='equilateral'?'정삼각형': (scenario.name==='isosceles'?'이등변삼각형':'부등변삼각형'));
-      return {
-        unit:'triangle', difficulty:diff, type:'figure',
-        prompt: '그림의 삼각형 이름으로 알맞은 것은?',
-        figure: fig,
-        options: ['직각삼각형','정삼각형','이등변삼각형','부등변삼각형'],
-        answer:{kind:'choice', value:ansName},
-        solution: `세 변/각을 보면 ${ansName}입니다.`
-      };
-    }
-    if(scenario.ask==='rightAngle' || rng()<0.5){
-      // given two angles find third
-      const a=scenario.angles[1], b=scenario.angles[2];
-      const third = 180 - a - b;
-      return {
-        unit:'triangle', difficulty:diff, type:'calc',
-        prompt: `삼각형의 두 각이 ${a}°와 ${b}°일 때, 나머지 한 각은 몇 도입니까?`,
-        figure: fig,
-        answer:{kind:'int', value:third},
-        solution: `180 - ${a} - ${b} = ${third}`
-      };
-    }
-    if(scenario.ask==='base'){
-      // perimeter
-      const per = scenario.sides.reduce((s,x)=>s+x,0);
-      return {
-        unit:'triangle', difficulty:diff, type:'calc',
-        prompt: '이 삼각형의 둘레는 몇 cm입니까?',
-        figure: fig,
-        answer:{kind:'int', value:per},
-        solution: `${scenario.sides.join('+')} = ${per}`
-      };
-    }
-    // perimeter default
-    const per = scenario.sides.reduce((s,x)=>s+x,0);
-    return {
-      unit:'triangle', difficulty:diff, type:'calc',
-      prompt: '이 삼각형의 둘레는 몇 cm입니까?',
-      figure: fig,
-      answer:{kind:'int', value:per},
-      solution: `${scenario.sides.join('+')} = ${per}`
-    };
+    const base=pick(rng,[40,50,60,70,80]);
+    const top=180-base*2;
+    const height=80*Math.tan(base*Math.PI/180);
+    const scale=Math.min(1,110/height);
+    const x1=130-80*scale,x2=130+80*scale,y=150-height*scale;
+    let inner=polygon(`130,${y} ${x1},150 ${x2},150`);
+    inner+=tickMark(130,y,x1,150)+tickMark(130,y,x2,150);
+    inner+=text(x1+16,140,base+'°',12);
+    inner+=text(x2-16,140,'?',12);
+    return {unit:'triangle',difficulty:diff,type:'figure',
+      prompt:'표시한 두 변의 길이가 같은 삼각형입니다. ? 각은 몇 도입니까?',
+      figure:svgWrap(inner),answer:{kind:'int',value:base},
+      solution:`이등변삼각형은 두 밑각의 크기가 같으므로 ${base}°입니다.`};
   }
 
   function quadFigure(type, w, h){
@@ -254,10 +213,10 @@
       inner += rect(60,40,100,100);
       inner += text(110,30,'4cm',12);
       // right angle marks at all corners
-      inner += rightAngle(60,40,8,'br');
-      inner += rightAngle(160,40,8,'bl');
-      inner += rightAngle(160,140,8,'tl');
-      inner += rightAngle(60,140,8,'tr');
+      inner += rightAngle(60,40,8,'tr');
+      inner += rightAngle(160,40,8,'tl');
+      inner += rightAngle(160,140,8,'bl');
+      inner += rightAngle(60,140,8,'br');
       // equal ticks
       inner += tickMark(60,40,160,40);
       inner += tickMark(160,40,160,140);
@@ -265,10 +224,10 @@
       inner += rect(50,50,140,80);
       inner += text(120,42,'7cm',12);
       inner += text(200,95,'4cm',12);
-      inner += rightAngle(50,50,8,'br');
-      inner += rightAngle(190,50,8,'bl');
-      inner += rightAngle(190,130,8,'tl');
-      inner += rightAngle(50,130,8,'tr');
+      inner += rightAngle(50,50,8,'tr');
+      inner += rightAngle(190,50,8,'tl');
+      inner += rightAngle(190,130,8,'bl');
+      inner += rightAngle(50,130,8,'br');
     } else if(type==='rhombus'){
       inner += polygon('130,30 210,90 130,150 50,90');
       inner += tickMark(130,30,210,90);
@@ -284,60 +243,16 @@
   }
 
   function genQuadrilateral(rng, diff){
-    const scenario = pick(rng, [
-      {type:'square', name:'정사각형', ask:'nameUnique'},
-      {type:'rectangle', name:'직사각형', ask:'name'},
-      {type:'rhombus', name:'마름모', ask:'name'},
-      {type:'parallelogram', name:'평행사변형', ask:'perimeter'},
-      {type:'trapezoid', name:'사다리꼴', ask:'name'}
+    const item=pick(rng,[
+      ['square','네 변의 길이가 같고 네 각이 모두 직각인 사각형은?','정사각형'],
+      ['rectangle','네 각이 모두 직각이고, 이 그림에서는 이웃한 두 변의 길이가 다른 사각형은?','직사각형'],
+      ['rhombus','네 변의 길이가 모두 같고 이 그림에서는 직각이 없는 사각형은?','마름모'],
+      ['parallelogram','마주 보는 두 쌍의 변이 각각 평행한 사각형을 무엇이라고 하나요?','평행사변형'],
+      ['trapezoid','마주 보는 한 쌍의 변이 평행한 사각형을 무엇이라고 하나요?','사다리꼴']
     ]);
-    const fig = quadFigure(scenario.type);
-    if(scenario.ask==='nameUnique' && (diff!=='hard')){
-      return {
-        unit:'quadrilateral', difficulty:diff, type:'figure',
-        prompt: '네 변의 길이와 네 각이 모두 같은 사각형의 이름은 무엇입니까?',
-        figure: fig,
-        options: ['정사각형','직사각형','마름모','평행사변형'],
-        answer:{kind:'choice', value:'정사각형'},
-        solution: '네 변과 네 각이 모두 같으면 정사각형입니다.'
-      };
-    }
-    if(scenario.type==='rectangle'){
-      const per = 2*(7+4);
-      if(diff==='hard'){
-        return {
-          unit:'quadrilateral', difficulty:diff, type:'calc',
-          prompt: '가로 7cm, 세로 4cm인 직사각형의 넓이는 몇 cm²입니까?',
-          figure: fig,
-          answer:{kind:'int', value:28},
-          solution: '7 × 4 = 28'
-        };
-      }
-      return {
-        unit:'quadrilateral', difficulty:diff, type:'calc',
-        prompt: '가로 7cm, 세로 4cm인 직사각형의 둘레는 몇 cm입니까?',
-        figure: fig,
-        answer:{kind:'int', value:per},
-        solution: '2 × (7+4) = 22'
-      };
-    }
-    if(scenario.ask==='perimeter'){
-      return {
-        unit:'quadrilateral', difficulty:diff, type:'calc',
-        prompt: '평행사변형의 둘레를 구하세요. (변의 길이: 5cm, 3cm, 5cm, 3cm)',
-        figure: fig,
-        answer:{kind:'int', value:16},
-        solution: '5+3+5+3 = 16'
-      };
-    }
-    return {
-      unit:'quadrilateral', difficulty:diff, type:'figure',
-      prompt: `이 사각형의 이름은 무엇입니까?`,
-      figure: fig,
-      options: ['정사각형','직사각형','마름모','평행사변형','사다리꼴'],
-      answer:{kind:'choice', value:scenario.name},
-      solution: `이 도형은 ${scenario.name}입니다.`
-    };
+    return {unit:'quadrilateral',difficulty:diff,type:'figure',prompt:item[1],
+      figure:quadFigure(item[0]),options:['정사각형','직사각형','마름모','평행사변형','사다리꼴'],
+      answer:{kind:'choice',value:item[2]},solution:`조건을 만족하는 사각형의 이름은 ${item[2]}입니다.`};
   }
 
   function lineGraphFigure(title, xLabel, yLabel, unit, data){
@@ -383,7 +298,8 @@
 
   function genLineGraph(rng, diff){
     const days = ['월','화','수','목','금'];
-    const data = days.map(l=>({label:l, value: randInt(rng, 5, 30)}));
+    const values = shuffle(rng, Array.from({length:26},(_,i)=>i+5));
+    const data = days.map((l,i)=>({label:l, value:values[i]}));
     const fig = lineGraphFigure('주간 연필 판매량', '요일', '판매량', '개', data);
     const askType = pick(rng, ['value','max','sum']);
     if(askType==='value'){
@@ -402,7 +318,8 @@
         unit:'linegraph', difficulty:diff, type:'figure',
         prompt: '가장 많이 판매한 요일은 언제입니까? (요일로 쓰세요)',
         figure: fig,
-        answer:{kind:'choice', value: days[maxI]+'요일', options: days.map(d=>d+'요일')},
+        options: days.map(d=>d+'요일'),
+        answer:{kind:'choice', value: days[maxI]+'요일'},
         solution: `${days[maxI]}요일에 ${data[maxI].value}개로 가장 많습니다.`
       };
     }
@@ -429,41 +346,10 @@
     return svgWrap(inner);
   }
   function genPolygon(rng, diff){
-    const scen = pick(rng, [
-      {n:5, name:'오각형', angle:108},
-      {n:6, name:'육각형', angle:120},
-      {n:8, name:'팔각형', angle:135}
-    ]);
-    const fig = polygonFigure(scen.name, scen.n);
-    if(diff==='easy'){
-      return {
-        unit:'polygon', difficulty:diff, type:'figure',
-        prompt: '이 다각형의 이름은 무엇입니까?',
-        figure: fig,
-        options: ['오각형','육각형','팔각형'],
-        answer:{kind:'choice', value:scen.name},
-        solution: `변이 ${scen.n}개이므로 ${scen.name}입니다.`
-      };
-    }
-    if(rng()<0.5){
-      const sum = (scen.n-2)*180;
-      return {
-        unit:'polygon', difficulty:diff, type:'calc',
-        prompt: `${scen.name}의 내각의 합은 몇 도입니까?`,
-        figure: fig,
-        answer:{kind:'int', value:sum},
-        solution: `(${scen.n}-2) × 180 = ${sum}`
-      };
-    }
-    const side = randInt(rng, 3, 8);
-    const per = side*scen.n;
-    return {
-      unit:'polygon', difficulty:diff, type:'calc',
-      prompt: `한 변이 ${side}cm인 정${scen.name}의 둘레는 몇 cm입니까?`,
-      figure: fig,
-      answer:{kind:'int', value:per},
-      solution: `${side} × ${scen.n} = ${per}`
-    };
+    const n=randInt(rng,5,8), names={5:'오각형',6:'육각형',7:'칠각형',8:'팔각형'};
+    const fig=polygonFigure('',n);
+    if(diff==='easy') return {unit:'polygon',difficulty:diff,type:'figure',prompt:'그림의 다각형 이름은 무엇인가요?',figure:fig,options:Object.values(names),answer:{kind:'choice',value:names[n]},solution:`변이 ${n}개이므로 ${names[n]}입니다.`};
+    return {unit:'polygon',difficulty:diff,type:'figure',prompt:'그림의 한 꼭짓점에서 그을 수 있는 대각선은 몇 개인가요?',figure:fig,answer:{kind:'int',value:n-3},solution:`꼭짓점 ${n}개 중 자기 자신과 이웃한 두 꼭짓점을 제외하면 ${n-3}개입니다. 그림에 직접 선을 그어 확인해 보세요.`};
   }
 
   const GEN = {
@@ -517,3 +403,4 @@
 
   global.MathGen = { generate, gcd, fracStr, mulberry32 };
 })(window);
+
