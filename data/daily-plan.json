@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-12",
-  "focusUnit": "quadrilateral",
-  "message": "오늘은 사각형의 변과 각을 살펴봐요. 평행한 변을 찾아보고, 영어는 듣고 따라 말한 뒤 가리고 써 봐요.",
+  "date": "2026-11-14",
+  "focusUnit": "polygon",
+  "message": "오늘은 다각형의 변과 꼭짓점을 세어 이름을 알아봐요. 이웃하지 않은 두 꼭짓점을 이으면 대각선이 돼요. 영어는 보고 한 번, 가리고 한 번 차근차근 써 봐요!",
   "curriculum": "EBSMath 초등 4학년 2학기 단원 연계 자체 제작 문제",
   "sourceUrl": "https://www.ebsmath.co.kr/"
 }
