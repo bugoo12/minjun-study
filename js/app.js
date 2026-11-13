@@ -11,9 +11,9 @@
   async function init(){
     // load data
     try {
-      const res = await fetch('data/math-config.json');
+      const res = await fetch('data/math-config.json',{cache:'no-store'});
       global.MathConfig = await res.json();
-    } catch(e){ console.error(e); global.MathConfig = { units:[], problemsPerDay:20 }; }
+    } catch(e){ console.error(e); global.MathConfig = { units:[], problemsPerDay:10 }; }
     try {
       const res = await fetch('data/vocabulary.json');
       const v = await res.json();
@@ -166,7 +166,9 @@
   function ensureMathSet(date){
     const st = global.Storage.get();
     if(st.mathSets[date]){
-      return st.mathSets[date];
+      const existing = st.mathSets[date];
+      const started = Object.values(existing.answers).some(a=>a.attempts>0 || a.completed);
+      if(existing.problems.length===10 || started || date!==global.DateUtil.todayKST()) return existing;
     }
     const settings = JSON.parse(JSON.stringify(st.settings));
     const cfg = global.MathConfig;
@@ -177,7 +179,7 @@
     const focus=(planned && planned.date===date && unitIds.includes(planned.focusUnit)) ? planned.focusUnit : unitIds[global.DateUtil.dateToIndex(date)%unitIds.length];
     if(focus) wmap[focus]=8;
     settings._weights = wmap;
-    settings._problemsPerDay = cfg.problemsPerDay || 20;
+    settings._problemsPerDay = cfg.problemsPerDay || 10;
     // enabled units respect settings.units
     const problems = global.MathGen.generate(date, settings);
     const set = { date, contentVersion: global.Storage.CONTENT_VERSION, problems, answers:{}, currentIndex:0, completed:false };
@@ -189,15 +191,15 @@
   function renderMath(){
     const date = global.DateUtil.todayKST();
     const set = ensureMathSet(date);
-    document.getElementById('math-meta').textContent = `${date} · ${set.problems.length}문제 · 4묶음`;
+    document.getElementById('math-meta').textContent = `${date} · ${set.problems.length}문제 · ${Math.ceil(set.problems.length/5)}묶음`;
     updateMathProgress(set);
     const groupsEl = document.getElementById('math-groups');
     groupsEl.innerHTML = '';
-    for(let g=1; g<=4; g++){
+    for(let g=1; g<=Math.ceil(set.problems.length/5); g++){
       const groupProblems = set.problems.filter(p=>p.group===g);
       const div = document.createElement('div');
       div.className = 'group';
-      div.innerHTML = `<h3>${g}묶음 (${(g-1)*5+1}~${g*5}번)</h3>`;
+      div.innerHTML = `<h3>${g}묶음 (${(g-1)*5+1}~${Math.min(g*5,set.problems.length)}번)</h3>`;
       groupProblems.forEach((p, idx)=>{
         const num = (g-1)*5 + idx + 1;
         const ans = set.answers[p.id];
@@ -207,9 +209,10 @@
         card.innerHTML = buildMathProblemHTML(p, num, ans);
         div.appendChild(card);
         bindMathProblem(card, p, set);
-        if(ans.completed){ showSavedMathResult(p, ans); }
+        
       });
       groupsEl.appendChild(div);
+      groupProblems.forEach(p=>{ if(set.answers[p.id].attempts>0) showSavedMathResult(p,set.answers[p.id]); });
     }
     document.getElementById('math-detail').classList.add('hidden');
   }
@@ -297,10 +300,12 @@
   function showSavedMathResult(p, ans){
     const slot = document.getElementById('result-'+p.id);
     if(!slot) return;
-    const cls = ans.lastCorrect ? 'correct' : 'wrong';
-    const icon = ans.lastCorrect ? '✅ 정답' : '❌ 다시 확인';
-    slot.innerHTML = `<div class="result ${cls}"><span class="icon">${icon}</span> 이전에 푼 문제입니다.<br><strong>풀이:</strong> ${escapeHtml(p.solution)}</div>`;
+    showMathResult(p, ans, global.gradeMath(p, ans.lastAnswer || {}));
   }
+  function explanationHTML(p, input){
+    return '<h4>차근차근 알아봐요</h4><ol>' + global.explainMath(p,input).map(step=>'<li>'+escapeHtml(step)+'</li>').join('') + '</ol><p>풀이를 읽고 답을 다시 써 보세요. 틀려도 괜찮아요!</p>';
+  }
+
   function showMathResult(p, ans, res){
     const slot = document.getElementById('result-'+p.id);
     if(!slot) return;
@@ -310,7 +315,7 @@
     }
     const cls = res.correct ? 'correct' : 'wrong';
     const icon = res.correct ? '✅ 정답' : '❌ 다시 확인';
-    slot.innerHTML = `<div class="result ${cls}"><span class="icon">${icon}</span> ${escapeHtml(res.message||'')}<br><strong>풀이:</strong> ${escapeHtml(p.solution)}</div>`;
+    slot.innerHTML = `<div class="result ${cls}"><span class="icon">${icon}</span> ${escapeHtml(res.message||'')}<br><strong>풀이:</strong> ${escapeHtml(p.solution)}${res.correct?'':explanationHTML(p,ans.lastAnswer)}</div>`;
   }
 
   // gradeMath provided by math-grade.js
@@ -624,7 +629,7 @@
         const set = st.mathSets[item.date];
         const prob = set ? set.problems.find(p=>p.id===item.problemId) : null;
         if(prob){
-          html += `<div class="problem"><div class="prompt">${escapeHtml(prob.prompt)}</div><div class="meta-text">정답: ${escapeHtml(answerText(prob))} · ${escapeHtml(prob.solution)}</div></div>`;
+          html += `<div class="problem"><div class="prompt">${escapeHtml(prob.prompt)}</div><div class="meta-text">정답: ${escapeHtml(answerText(prob))} · ${escapeHtml(prob.solution)}</div>${explanationHTML(prob,set.answers[prob.id].lastAnswer)}</div>`;
         }
       });
     }
@@ -756,7 +761,7 @@
     const set = ensureMathSet(date);
     const target = document.getElementById(withAnswers? 'print-math-ans' : 'print-math');
     document.querySelectorAll('.print-area').forEach(e=>{ e.classList.remove('active-print'); e.innerHTML=''; });
-    let html = `<div class="print-page"><div class="print-title">민준이 수학 학습지</div><div class="print-sub">${date} · 20문제</div>`;
+    let html = `<div class="print-page"><div class="print-title">민준이 수학 학습지</div><div class="print-sub">${date} · ${set.problems.length}문제</div>`;
     set.problems.forEach((p,i)=>{
       html += `<div class="print-problem no-break"><strong>${i+1}.</strong> ${escapeHtml(p.prompt)}`;
       if(p.figure) html += `<div class="print-figure">${p.figure}</div>`;
@@ -822,4 +827,5 @@
 
   init();
 })();
+
 
