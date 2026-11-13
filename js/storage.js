@@ -6,7 +6,7 @@
   function defaultSettings(){
     return {
       units: { fraction:true, triangle:true, decimal:true, quadrilateral:true, linegraph:true, polygon:true },
-      difficulty: { easy:8, normal:8, hard:4 },
+      difficulty: { easy:4, normal:4, hard:2 },
       voiceName: null,
       voiceLang: null,
       rate: 1.0,
@@ -87,3 +87,4 @@
   }
   global.Storage = { load, get, update, save, reset, exportJSON, importJSON, KEY, CONTENT_VERSION };
 })(window);
+
