@@ -371,14 +371,16 @@
     const wmap = settings._weights || {fraction:4,triangle:3,decimal:4,quadrilateral:3,linegraph:3,polygon:3};
     enabledUnits.forEach(u=>{ weights[u]=wmap[u]||1; });
     if(enabledUnits.length===0){ enabledUnits.push('fraction'); weights.fraction=1; }
-    const total = settings._problemsPerDay || 20;
+    const total = settings._problemsPerDay || 10;
     const counts = allocCounts(weights, total);
     // build unit list
     let unitList=[];
     Object.entries(counts).forEach(([u,c])=>{ for(let i=0;i<c;i++) unitList.push(u); });
     unitList = shuffle(rng, unitList);
     // difficulty list
-    const diffCfg = settings.difficulty || {easy:8,normal:8,hard:4};
+    const rawDiff = settings.difficulty || {easy:4,normal:4,hard:2};
+    const cleanDiff = Object.fromEntries(['easy','normal','hard'].map(k=>[k,Math.max(0,Number(rawDiff[k])||0)]));
+    const diffCfg = allocCounts(Object.values(cleanDiff).some(v=>v>0)?cleanDiff:{easy:4,normal:4,hard:2},total);
     let diffList=[];
     for(let i=0;i<(diffCfg.easy||0);i++) diffList.push('easy');
     for(let i=0;i<(diffCfg.normal||0);i++) diffList.push('normal');
@@ -403,4 +405,5 @@
 
   global.MathGen = { generate, gcd, fracStr, mulberry32 };
 })(window);
+
 
