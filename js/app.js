@@ -388,7 +388,7 @@
   function openEngWord(wordId, date){
     try { global.Speech.cancel(); } catch(e){}
     currentEngWord = wordId;
-    currentEngStep = 0;
+    currentEngStep = 1;
     const set = global.English.ensureSet(date);
     currentHintUsed = !!(set.progress[wordId] && set.progress[wordId].hintUsed);
     renderEngStep(date);
@@ -405,7 +405,7 @@
     html += `<p><strong>뜻:</strong> ${escapeHtml(w.meaning)}</p>`;
     if(w.icon) html += `<div style="font-size:44px;margin:8px 0;">${escapeHtml(w.icon)}</div>`;
     html += audioButtons(w, testing);
-    html += `<p class="meta-text">단계 ${currentEngStep+1} / 6</p>`;
+    html += `<p class="meta-text">쓰기 ${currentEngStep===1?1:2} / 2</p>`;
 
     if(currentEngStep===0){
       html += `<p>단어·뜻·그림을 보고 발음을 들어 보세요.</p>`;
@@ -493,7 +493,7 @@
       if(currentEngStep===1 && detail.querySelector('#copy-spell').value.trim().toLowerCase()!==w.word.toLowerCase()){
         detail.querySelector('#copy-result').textContent='위 단어를 보고 철자를 천천히 써 보세요.'; return;
       }
-      currentEngStep = Math.min(5, currentEngStep+1);
+      currentEngStep = 3;
       renderEngStep(date);
     });
     const shadowBtn = detail.querySelector('#eng-shadow');
@@ -545,8 +545,17 @@
       global.English.recordFullAttempt(currentEngWord, date, correct, currentHintUsed, noHint);
       if(correct){
         slot.innerHTML = `<div class="result correct"><span class="icon">✅ 정답</span> 철자를 정확히 썼어요!${currentHintUsed?' (힌트 사용)':''}</div>${diffHtml}`;
-        // move to step4
-        setTimeout(()=>{ currentEngStep = 4; renderEngStep(date); }, 600);
+        // Advance automatically after the second writing exercise.
+        fullSubmit.disabled = true;
+        const completedWord = currentEngWord;
+        setTimeout(()=>{
+          if(currentView!=='english' || currentEngWord!==completedWord || global.DateUtil.todayKST()!==date) return;
+          const nextSet=global.English.ensureSet(date);
+          const ids=[...nextSet.newWordIds,...nextSet.reviewWordIds];
+          const nextId=ids.find(id=>id!==completedWord && !nextSet.progress[id].practiced);
+          if(nextId) openEngWord(nextId,date);
+          else renderEnglish();
+        }, 800);
       } else {
         currentHintUsed=true;
         global.English.markHint(currentEngWord,date);
