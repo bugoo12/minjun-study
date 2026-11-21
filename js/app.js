@@ -13,7 +13,7 @@
     try {
       const res = await fetch('data/math-config.json',{cache:'no-store'});
       global.MathConfig = await res.json();
-    } catch(e){ console.error(e); global.MathConfig = { units:[], problemsPerDay:10 }; }
+    } catch(e){ console.error(e); global.MathConfig = { units:[], problemsPerDay:15 }; }
     try {
       const res = await fetch('data/vocabulary.json');
       const v = await res.json();
@@ -28,6 +28,13 @@
 
     // settings units defaults from config
     const st = global.Storage.get();
+    // Apply the new recommended difficulty once; retain all learning records.
+    st.meta = st.meta || {};
+    if(st.meta.mathProfile !== '2026-11-21-late'){
+      st.settings.difficulty = {...(global.MathConfig.difficulty || {easy:3,normal:8,hard:4})};
+      st.meta.mathProfile = '2026-11-21-late';
+      global.Storage.save();
+    }
     if(global.MathConfig.units){
       global.MathConfig.units.forEach(u=>{
         if(st.settings.units[u.id] === undefined) st.settings.units[u.id] = u.enabledByDefault !== false;
@@ -168,7 +175,7 @@
     if(st.mathSets[date]){
       const existing = st.mathSets[date];
       const started = Object.values(existing.answers).some(a=>a.attempts>0 || a.completed);
-      if(existing.problems.length===10 || started || date!==global.DateUtil.todayKST()) return existing;
+      if(existing.problems.length===(global.MathConfig.problemsPerDay || 15) || started || date!==global.DateUtil.todayKST()) return existing;
     }
     const settings = JSON.parse(JSON.stringify(st.settings));
     const cfg = global.MathConfig;
@@ -177,9 +184,9 @@
     const unitIds=(cfg.units||[]).map(u=>u.id);
     const planned=global.DailyPlan;
     const focus=(planned && planned.date===date && unitIds.includes(planned.focusUnit)) ? planned.focusUnit : unitIds[global.DateUtil.dateToIndex(date)%unitIds.length];
-    if(focus) wmap[focus]=8;
+    if(focus) wmap[focus]=(wmap[focus] || 1)+2;
     settings._weights = wmap;
-    settings._problemsPerDay = cfg.problemsPerDay || 10;
+    settings._problemsPerDay = cfg.problemsPerDay || 15;
     // enabled units respect settings.units
     const problems = global.MathGen.generate(date, settings);
     const set = { date, contentVersion: global.Storage.CONTENT_VERSION, problems, answers:{}, currentIndex:0, completed:false };
@@ -827,5 +834,6 @@
 
   init();
 })();
+
 
 
