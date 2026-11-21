@@ -243,6 +243,16 @@
   }
 
   function genQuadrilateral(rng, diff){
+    if(diff==='hard'){
+      const items=[
+        ['정사각형에 대한 설명 중 항상 옳은 것은?', ['직사각형이면서 마름모이다','직사각형이지만 마름모는 아니다','평행한 변이 없다','네 각의 크기가 서로 다르다'],0,
+         ['정사각형은 네 각이 모두 직각이므로 직사각형의 조건을 만족해요.','네 변의 길이도 모두 같으므로 마름모의 조건도 만족해요.','한 도형이 여러 사각형의 성질을 동시에 가질 수 있어요.']],
+        ['마름모가 정사각형이 되려면 어떤 조건을 더 만족해야 하나요?', ['네 각이 모두 직각이다','네 변의 길이가 모두 다르다','평행한 변이 없다','꼭짓점이 다섯 개이다'],0,
+         ['마름모는 이미 네 변의 길이가 모두 같아요.','정사각형은 네 변의 길이가 같으면서 네 각이 모두 직각이어야 해요.','따라서 네 각이 모두 직각이라는 조건을 더 확인해요.']]
+      ];
+      const q=pick(rng,items);
+      return {unit:'quadrilateral',difficulty:diff,type:'properties',prompt:q[0],figure:null,options:shuffle(rng,q[1]),answer:{kind:'choice',value:q[1][q[2]]},solution:q[3].join(' '),explanationSteps:q[3]};
+    }
     const item=pick(rng,[
       ['square','네 변의 길이가 같고 네 각이 모두 직각인 사각형은?','정사각형'],
       ['rectangle','네 각이 모두 직각이고, 이 그림에서는 이웃한 두 변의 길이가 다른 사각형은?','직사각형'],
@@ -301,7 +311,15 @@
     const values = shuffle(rng, Array.from({length:26},(_,i)=>i+5));
     const data = days.map((l,i)=>({label:l, value:values[i]}));
     const fig = lineGraphFigure('주간 연필 판매량', '요일', '판매량', '개', data);
-    const askType = pick(rng, ['value','max','sum']);
+    if(diff==='hard'){
+      const changes=data.slice(1).map((d,i)=>Math.abs(d.value-data[i].value));
+      const biggest=Math.max(...changes);
+      const steps=['변화한 양은 이웃한 두 요일의 값 중 큰 값에서 작은 값을 빼서 구해요.',
+        ...changes.map((v,i)=>days[i]+'→'+days[i+1]+': '+Math.max(data[i].value,data[i+1].value)+' - '+Math.min(data[i].value,data[i+1].value)+' = '+v+'개'),
+        '네 변화량을 비교하면 가장 큰 값은 '+biggest+'개예요. 늘어난 경우와 줄어든 경우를 모두 비교해요.'];
+      return {unit:'linegraph',difficulty:diff,type:'change',prompt:'이웃한 두 요일 사이에 판매량이 늘거나 줄어든 양 중 가장 큰 값은 몇 개입니까?',figure:fig,answer:{kind:'int',value:biggest},solution:steps[steps.length-1],explanationSteps:steps};
+    }
+    const askType = pick(rng, diff==='easy'?['value','max']:['sum']);
     if(askType==='value'){
       const idx = randInt(rng,0,data.length-1);
       return {
@@ -348,6 +366,13 @@
   function genPolygon(rng, diff){
     const n=randInt(rng,5,8), names={5:'오각형',6:'육각형',7:'칠각형',8:'팔각형'};
     const fig=polygonFigure('',n);
+    if(diff==='hard'){
+      const count=n-3;
+      const steps=['한 꼭짓점에서는 자기 자신에게 선을 그을 수 없어요.','이웃한 두 꼭짓점을 잇는 선은 변이므로 대각선에서 제외해요.',
+        '빠진 꼭짓점 3개를 다시 더하면 '+count+' + 3 = '+n+'개예요.',
+        '꼭짓점과 변의 수는 같으므로 '+names[n]+'이에요. 직접 그림을 그려 확인해 봐요.'];
+      return {unit:'polygon',difficulty:diff,type:'reverse-diagonal',prompt:'어떤 다각형의 한 꼭짓점에서 그을 수 있는 대각선이 '+count+'개입니다. 이 다각형의 이름은 무엇인가요?',figure:null,options:Object.values(names),answer:{kind:'choice',value:names[n]},solution:steps[2]+' '+steps[3],explanationSteps:steps};
+    }
     if(diff==='easy') return {unit:'polygon',difficulty:diff,type:'figure',prompt:'그림의 다각형 이름은 무엇인가요?',figure:fig,options:Object.values(names),answer:{kind:'choice',value:names[n]},solution:`변이 ${n}개이므로 ${names[n]}입니다.`};
     return {unit:'polygon',difficulty:diff,type:'figure',prompt:'그림의 한 꼭짓점에서 그을 수 있는 대각선은 몇 개인가요?',figure:fig,answer:{kind:'int',value:n-3},solution:`꼭짓점 ${n}개 중 자기 자신과 이웃한 두 꼭짓점을 제외하면 ${n-3}개입니다. 그림에 직접 선을 그어 확인해 보세요.`};
   }
@@ -371,7 +396,7 @@
     const wmap = settings._weights || {fraction:4,triangle:3,decimal:4,quadrilateral:3,linegraph:3,polygon:3};
     enabledUnits.forEach(u=>{ weights[u]=wmap[u]||1; });
     if(enabledUnits.length===0){ enabledUnits.push('fraction'); weights.fraction=1; }
-    const total = settings._problemsPerDay || 10;
+    const total = settings._problemsPerDay || 15;
     const counts = allocCounts(weights, total);
     // build unit list
     let unitList=[];
@@ -405,5 +430,6 @@
 
   global.MathGen = { generate, gcd, fracStr, mulberry32 };
 })(window);
+
 
 
