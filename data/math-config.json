@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "contentVersion": "2026-11-11",
+  "contentVersion": "2026-11-21-late",
   "title": "민준이의 매일 공부",
   "grade": "초등 4학년 2학기",
   "units": [
@@ -8,45 +8,45 @@
       "id": "fraction",
       "name": "분수의 덧셈과 뺄셈",
       "enabledByDefault": true,
-      "weight": 4
+      "weight": 2
     },
     {
       "id": "triangle",
       "name": "삼각형",
       "enabledByDefault": true,
-      "weight": 3
+      "weight": 2
     },
     {
       "id": "decimal",
       "name": "소수의 덧셈과 뺄셈",
       "enabledByDefault": true,
-      "weight": 4
+      "weight": 2
     },
     {
       "id": "quadrilateral",
       "name": "사각형",
       "enabledByDefault": true,
-      "weight": 3
+      "weight": 5
     },
     {
       "id": "linegraph",
       "name": "꺾은선그래프",
       "enabledByDefault": true,
-      "weight": 3
+      "weight": 5
     },
     {
       "id": "polygon",
       "name": "다각형",
       "enabledByDefault": true,
-      "weight": 3
+      "weight": 5
     }
   ],
   "difficulty": {
-    "easy": 4,
-    "normal": 4,
-    "hard": 2
+    "easy": 3,
+    "normal": 8,
+    "hard": 4
   },
   "groupSize": 5,
-  "groupsPerDay": 2,
-  "problemsPerDay": 10
+  "groupsPerDay": 3,
+  "problemsPerDay": 15
 }
