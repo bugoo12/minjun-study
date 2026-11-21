@@ -54,6 +54,7 @@
     const expected=a.kind==='fraction'?`${a.num}/${a.den}`:a.kind==='scaled'?(a.value/a.scale).toFixed(Math.round(Math.log10(a.scale))):String(a.value);
     const entered=a.kind==='fraction'?`${input.whole||0}과 ${input.num||0}/${input.den||'□'}`:String(input.value??'빈칸');
     steps.push(`내가 쓴 답은 ${entered}, 이 문제의 정답은 ${expected}예요. 아래 과정을 함께 확인해 봐요.`);
+    if(p.explanationSteps) return steps.concat(p.explanationSteps);
     const fractions=[...p.prompt.matchAll(/(\d+)\/(\d+)/g)].map(m=>[Number(m[1]),Number(m[2])]);
     if(p.unit==='fraction' && fractions.length){
       const [n,d]=fractions[0];
@@ -95,5 +96,6 @@
   global.gradeMath = gradeMath;
   global.gcd = gcd;
 })(window);
+
 
 
